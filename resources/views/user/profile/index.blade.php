@@ -35,7 +35,7 @@
                     </div>
                     @foreach(\App\Models\PhoneNumber::where('user_id',$user->id)->select('phone_number','id')->get() as $key => $phoneNumber)
 
-                        <div class="col-span-12">
+                        <div class="col-span-12" id="response_add_number">
                             <input type="hidden" name="phone_number_ids[]" value="{{$phoneNumber->id}}">
                             <label>Phone Number</label>
 
@@ -48,6 +48,7 @@
                                        onclick="del(this.parentElement.parentElement.parentElement)"></i>
                                 </div>
                             </div>
+
 
 
                         </div>
@@ -65,7 +66,7 @@
         </div>
     </div>
 
-{{--  parol --}}
+    {{--  parol --}}
     <div class="modal" id="header-footer-modal-preview-2">
         <div class="modal__content">
             <div class="p-5 grid grid-cols-12 gap-4 row-gap-3">
@@ -91,31 +92,32 @@
         </div>
     </div>
 
-{{-- parol --}}
+    {{-- parol --}}
 
-{{-- add number--}}
+    {{-- add number--}}
     <div class="modal" id="header-footer-modal-preview-3">
         <div class="modal__content">
-            <form action="{{route('admin.test2')}}" id="btn_add_number">
+            <form  id="btn_add_number">
                 @csrf
-            <div class="p-5 grid grid-cols-12 gap-4 row-gap-3">
-                <div class="col-span-12">
-                    <label>Номер Телефона</label>
-                    <input type="number" required name="phone_number" class="input w-full border mt-2 flex-1" placeholder="Номер Телефона">
+                <div class="p-5 grid grid-cols-12 gap-4 row-gap-3">
+                    <div class="col-span-12">
+                        <label>Номер Телефона</label>
+                        <input type="tel" required name="phone_number" class="input w-full border mt-2 flex-1"
+                               placeholder="Номер Телефона">
+                    </div>
                 </div>
-            </div>
-            <div class="px-5 py-3 text-right border-t border-gray-200">
-                <button type="button" data-dismiss="modal"
-                        class="button w-20 border text-gray-700 mr-1">Cancel
-                </button>
-                <button type="button" onclick="add_number()" class="button w-20 bg-theme-1 text-white">Add</button>
-            </div>
+                <div class="px-5 py-3 text-right border-t border-gray-200">
+                    <button type="button" data-dismiss="modal"
+                            class="button w-20 border text-gray-700 mr-1">Cancel
+                    </button>
+                    <button type="button" onclick="add_number()" class="button w-20 bg-theme-1 text-white">Add</button>
+                </div>
 
 
             </form>
         </div>
     </div>
-{{-- add number --}}
+    {{-- add number --}}
     <div class="modal" id="header-footer-modal-preview-4">
         <div class="modal__content">
             <div class="p-5 grid grid-cols-12 gap-4 row-gap-3">
@@ -465,34 +467,66 @@
 
     </div>
 @section('js')
+    <script src="node_modules/intl-tel-input/src/js/intlTelInput.js">
+        /* var input = document.querySelector("#phone_number");
+   window.intlTelInput(input, {
+   customPlaceholder: function(selectedCountryPlaceholder, selectedCountryData) {
+   return "e.g. " + selectedCountryPlaceholder;
+   },
+   });*/
+    </script>
+
+
 
     <script>
 
+
         function  add_number() {
-            alert(1)
+
             let forma = document.getElementById('btn_add_number');
-            let number = forma.querySelector('input[name="phone_number"]');
-            let _token=forma.querySelector('input[name="_token"]');
+            let number = forma.querySelector('input[name="phone_number"]').value;
+            let _token=forma.querySelector('input[name="_token"]').value;
 
+            try {
+                $.ajax({
+                    url: "{{route('admin.add_number')}}",
+                    type: "POST",
+                    data: {
+                        user_id: {{auth()->user()->id}},
+                        phone_number: number,
+                        _token: _token,
 
+                    },
+                    success: function (response) {
+                        if (response) {
 
-            $.ajax({
-                url: "{{route('admin.add_number')}}",
-                type: "POST",
-                data: {
-                    user_id: {{auth()->user()->id}},
-                    phone_number: number,
-                    _token: _token,
+                            console.log(response)
+                            forma.querySelector('#btn_add_number input[name="phone_number"]').value='';
 
-                },
-                success: function (response) {
-                    if (response) {
-                        alert(response)
+                            alert('UREEEEEE!!!');
 
+                            document.getElementById('response_add_number').innerHTML+=`
+                             <input type="hidden" name="phone_number_ids[]" value="${response.id}">
+                            <label>Phone Number</label>
 
+                            <div style="display: flex;">
+                                <input type="text" style="display: inline; margin-right: 10px;" name="phone_number[]"
+                                       class="input w-full border mt-2 flex-1" value="${response.phone_number}">
+
+                                <div id="edit_profile">
+                                    <i class="fa fa-close mt-2" style="font-size: 33px; cursor: pointer;"
+                                       onclick="del(this.parentElement.parentElement.parentElement)"></i>
+                                </div>
+                            </div>
+                            `;
+
+                            tekshir();
+                        }
                     }
-                }
-            });
+                });
+            } catch (e) {
+                debugger
+            }
 
 
         }
@@ -515,7 +549,7 @@
 
     function del(data) {
         data.remove();
-     data.querySelector('[name="phone_number_ids[]"]').remove();
+        data.querySelector('[name="phone_number_ids[]"]').remove();
         tekshir();
     }
 </script>
